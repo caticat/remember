@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <script src="number_code.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript">
+            // 固定数据
+            // const data = {
+            //     1:"111",
+            //     "2":"222",
+            // };
+
+            // 生成数据
+            const arr = function(data) {
+                let ret = Array();
+                for (let k in data) {
+                    ret.push(k);
+                }
+                return ret;
+            }(data);
+
+            // 动态数据
+            let arrRandom = Array(); // 随机索引数组
+            let curIndex = -1; // 当前出题索引
+
+            // 初始
+            window.onload = function () {
+                reset();
+                ask();
+            };
+
+            // 随机
+            function rand(min, max) {
+                if (min > max) {
+                    let tmp = min;
+                    min = max;
+                    max = tmp;
+                }
+                return parseInt(Math.random() * (max - min + 1) + min, 10);
+            }
+
+            // 重置
+            function reset() {
+                curIndex = 0;
+                const l = arr.length;
+                arrRandom = arr.slice();
+                let key = 0;
+                let tmp = 0;
+                for (let i = 0; i < l; i++) {
+                    key = rand(0, l-1);
+                    tmp = arrRandom[key];
+                    arrRandom[key] = arrRandom[i];
+                    arrRandom[i] = tmp;
+                }
+            }
+
+            // 出题
+            function ask() {
+                if (curIndex >= arrRandom.length) {
+                    alert("Done!");
+                    return;
+                }
+                // console.log(curIndex, arrRandom[curIndex], data[arrRandom[curIndex]]);
+                console.log(document.getElementById("reverse").checked);
+                if (document.getElementById("reverse").checked) {
+                    document.getElementById("question").innerHTML = data[arrRandom[curIndex]];
+                } else {
+                    document.getElementById("question").innerHTML = arrRandom[curIndex];
+                }
+                document.getElementById("answer").innerHTML = "";
+                document.getElementById("progress").innerHTML = "当前进度:"+(curIndex + 1)+"/"+arrRandom.length;
+            }
+
+            // 显示答案
+            function ans() {
+                if (curIndex >= arrRandom.length) {
+                    alert("Done!");
+                    return;
+                }
+                if (document.getElementById("reverse").checked) {
+                    document.getElementById("answer").innerHTML = arrRandom[curIndex];
+                } else {
+                    document.getElementById("answer").innerHTML = data[arrRandom[curIndex]];
+                }
+            }
+
+            // 下一个
+            function next() {
+                if (curIndex + 1 >= arrRandom.length) {
+                    reqRestart();
+                    return;
+                }
+                curIndex += 1;
+                ask();
+            }
+
+            // 询问是否重新开始
+            function reqRestart() {
+                let ret = confirm("已经全部完成,是否重新开始?");
+                if (ret) {
+                    reset();
+                    ask();
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+            <label>问题</label>
+            <label>答案</label>
+        </div>
+        <div>
+            <label id="question"></label>
+            <label id="answer"></label>
+        </div>
+        <div>
+            <button onclick="ans()">显示答案</button>
+        </div>
+        <div>
+            <button onclick="next()">下一个</button>
+        </div>
+        <div>
+            <label>反向记忆</label><input id="reverse" type="checkbox"/>
+        </div>
+        <div>
+            <label id="progress"></label>
+        </div>
+    </body>
+</html>
