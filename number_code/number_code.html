@@ -2,6 +2,13 @@
     <head>
         <!-- 这只是一个粗糙的辅助记忆数字编码的工具,不要对它的功能有太大的期望,最终还是要靠自己记忆(by:老番) -->
         <meta charset="UTF-8"/>
+        <style>
+            cssTimeCost
+            {
+                width:100%;
+                height:100%;
+            }
+        </style>
         <script src="number_code.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript">
             // 固定数据
@@ -19,41 +26,145 @@
                 return ret;
             }(data);
 
+            // 状态
+            const PageState = {
+              Start:0,
+              Progress:1,
+              Finish:2,
+            };
+            const SequenceState = {
+                Random:0,
+                Forward:1,
+                Backward:2,
+            };
+
             // 动态数据
             let arrRandom = Array(); // 随机索引数组
             let curIndex = -1; // 当前出题索引
             let timeBegin = -1; // 记录总用时
+            let questionLen = arr.length; // 题目数量
+            let timeBeginQuestion = -1; // 当前答题初始时间
+            let mapTimeCost = {}; // 耗时统计
 
             // 初始
             window.onload = function () {
                 reset();
-                ask();
             };
 
-            // 随机
-            function rand(min, max) {
-                if (min > max) {
-                    let tmp = min;
-                    min = max;
-                    max = tmp;
+            // 切换页面状态
+            function switchPageState(state) {
+                // 离开状态
+                // TODO 功能待实现,初始化数据获取
+                // switch (pageState) {
+                //     case PageState.Start:
+                //
+                // }
+
+                // 进入状态
+                document.getElementById("pageStart").style.display = "none";
+                document.getElementById("pageProgress").style.display = "none";
+                document.getElementById("pageFinish").style.display = "none";
+                switch (state) {
+                    case PageState.Start:
+                        document.getElementById("pageStart").style.display = "";
+                        break;
+                    case PageState.Progress:
+                        // 处理数据
+                        // 出题长度
+                        questionLen = parseInt(document.getElementById("questionMaxLength").value);
+                        console.log("长度:"+questionLen + ",文字:" + document.getElementById("questionMaxLength").value);
+                        // 出题顺序
+                        const l = arr.length;
+                        arrRandom = arr.slice();
+
+                        let sequence = SequenceState.Random;
+                        document.getElementsByName("sequence").forEach(function (node, value){ // MARK: 这里有个循环过度的问题,无视了,抛异常什么的太难看了
+                            if (node.checked) {
+                                sequence = value;
+                            }
+                        });
+
+                        switch (sequence) {
+                            case SequenceState.Random:
+                                let key = 0;
+                                let tmp = 0;
+                                for (let i = 0; i < l; i++) {
+                                    key = rand(0, l-1);
+                                    tmp = arrRandom[key];
+                                    arrRandom[key] = arrRandom[i];
+                                    arrRandom[i] = tmp;
+                                }
+                                break;
+                            case SequenceState.Forward:
+                                break;
+                            case SequenceState.Backward:
+                                arrRandom = arr.reverse();
+                                break;
+                            default:
+                                alert("重置时,不知道按照什么顺序来进行出题");
+                                return;
+                        }
+                        timeBegin = parseInt((new Date()).getTime() / 1000);
+                        ask();
+
+                        // 显示页面
+                        document.getElementById("pageProgress").style.display = "";
+                        break;
+                    case PageState.Finish:
+                        // 处理数据
+                        let timeNow = parseInt((new Date()).getTime() / 1000);
+                        let duration = timeNow - timeBegin;
+                        let average = duration / (curIndex + 1);
+                        document.getElementById("totalCostTime").innerHTML = "当前用时:"+getTimeStr(duration)+",平均用时:"+getTimeStr(average);
+
+                        // 最耗时统计
+                        let arrTimeCost = Array();
+                        for (let key in mapTimeCost) {
+                            arrTimeCost.push({index:key,cost:mapTimeCost[key]});
+                        }
+                        arrTimeCost.sort(function (key){
+                            return function (a, b) {
+                                console.log(key+",a:"+a[key]+",b:"+b[key]);
+                                if (a[key] < b[key]) {
+                                    return 1;
+                                } else if (a[key] == b[key]) {
+                                    return 0;
+                                } else {
+                                    return -1;
+                                }
+                            }
+                        }("cost"));
+                        let costLen = 10;
+                        if (arrTimeCost.length < costLen) {
+                            costLen = arrTimeCost.length;
+                        }
+                        document.getElementById("labelCostTime").innerText = "最耗时的前"+costLen+"个编码";
+                        let strTimeCost = "";
+                        for (let i = 0; i < costLen; i++) {
+                            strTimeCost += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + ":用时:" + getTimeStr(arrTimeCost[i].cost) + "\n";
+                        }
+                        document.getElementById("timeCost").rows = costLen + 2;
+                        document.getElementById("timeCost").value = strTimeCost;
+
+                        // 显示页面
+                        document.getElementById("pageFinish").style.display = "";
+                        break;
+                    default:
+                        return;
                 }
-                return parseInt(Math.random() * (max - min + 1) + min, 10);
             }
 
             // 重置
             function reset() {
                 curIndex = 0;
-                const l = arr.length;
-                arrRandom = arr.slice();
-                let key = 0;
-                let tmp = 0;
-                for (let i = 0; i < l; i++) {
-                    key = rand(0, l-1);
-                    tmp = arrRandom[key];
-                    arrRandom[key] = arrRandom[i];
-                    arrRandom[i] = tmp;
-                }
+                mapTimeCost = {};
                 document.getElementById("costTime").innerHTML = "";
+                if (document.getElementById("questionMaxLength").value == 0) {
+                    document.getElementById("questionMaxLength").max = questionLen;
+                    document.getElementById("questionMaxLength").value = questionLen;
+                }
+
+                switchPageState(PageState.Start)
             }
 
             // 出题
@@ -70,13 +181,21 @@
                     document.getElementById("question").innerHTML = arrRandom[curIndex];
                 }
                 document.getElementById("answer").innerHTML = "";
-                document.getElementById("progress").innerHTML = "当前进度:"+(curIndex + 1)+"/"+arrRandom.length;
+                document.getElementById("progress").innerHTML = "当前进度:"+(curIndex + 1)+"/"+questionLen;
+
+                // 时间统计
+                timeBeginQuestion = parseInt((new Date()).getTime() / 1000);
+
+                // 直接显示答案
+                if (document.getElementById("showAnswerDirectly").checked) {
+                    ans()
+                }
             }
 
             // 显示答案
             function ans() {
-                if (curIndex >= arrRandom.length) {
-                    alert("Done!");
+                if (curIndex >= questionLen) {
+                    alert("No Answer for key:[" + curIndex +"]. Index Out Off Range!");
                     return;
                 }
                 if (document.getElementById("reverse").checked) {
@@ -88,34 +207,60 @@
 
             // 下一个
             function next() {
-                if (curIndex + 1 >= arrRandom.length) {
-                    reqRestart();
+                // 时间统计
+                mapTimeCost[curIndex] = parseInt((new Date()).getTime() / 1000) - timeBeginQuestion;
+
+                if (curIndex + 1 >= questionLen) {
+                    switchPageState(PageState.Finish);
                     return;
                 }
-                if (curIndex == 0) {
-                    timeBegin = parseInt((new Date()).getTime() / 1000);
-                }
+
                 curIndex += 1;
                 ask();
                 showTime();
             }
 
-            // 询问是否重新开始
-            function reqRestart() {
-                let timeNow = parseInt((new Date()).getTime() / 1000);
-                let ret = confirm("已经全部完成,总用时:"+getTimeStr(timeNow - timeBegin)+",是否重新开始?");
-                if (ret) {
-                    reset();
-                    ask();
+            // 答题数量长度变更
+            function onQuestionMaxLengthChanged(ui) {
+                if (!ui.value) {
+                    ui.value = questionLen;
+                    return
+                }
+                let len = parseInt(ui.value);
+                if (len > arr.length) {
+                    len = questionLen;
+                } else if (len < 1) {
+                    len = questionLen;
+                }
+                ui.value = len;
+            }
+
+            // 恢复计划答题最大值
+            function resumeQuestionMaxLength() {
+                document.getElementById("questionMaxLength").value = arr.length;
+            }
+
+            // 直接显示答案状态变更
+            function onShowAnswerDirectlyChanged(ui) {
+                if (ui.checked) {
+                    document.getElementById("showAnswer").style.display = "none";
+                } else {
+                    document.getElementById("showAnswer").style.display = "";
                 }
             }
 
             // 显示时间
             function showTime() {
                 let timeNow = parseInt((new Date()).getTime() / 1000);
-                document.getElementById("costTime").innerHTML = "当前用时:"+getTimeStr(timeNow - timeBegin);
+                let duration = timeNow - timeBegin;
+                let average = 0;
+                if (curIndex > 0) {
+                    average = duration / curIndex;
+                }
+                document.getElementById("costTime").innerHTML = "当前用时:"+getTimeStr(duration)+",平均用时:"+getTimeStr(average);
             }
 
+            // 获取时间间隔字符串
             function getTimeStr(duration) {
                 let minute = parseInt(duration / 60);
                 let second = duration % 60;
@@ -124,35 +269,78 @@
                     ret += minute + "分"
                 }
                 if ((second > 0) || (minute == 0)) {
-                    ret += second + "秒"
+                    ret += (parseInt(second * 100) / 100) + "秒"
                 }
                 return ret
+            }
+
+            // 随机
+            function rand(min, max) {
+                if (min > max) {
+                    let tmp = min;
+                    min = max;
+                    max = tmp;
+                }
+                return parseInt(Math.random() * (max - min + 1) + min, 10);
             }
         </script>
     </head>
     <body>
-        <div>
-            <label>问题</label>
-            <label>答案</label>
+        <div id="pageStart">
+            <div>
+                <div>
+                    <label>测试题目数量:</label><input id="questionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
+                    <button onclick="resumeQuestionMaxLength()">最大值</button>
+                </div>
+                <div>
+                    <label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>
+                    <label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>
+                    <label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>
+                </div>
+                <div>
+                    <label>反向记忆</label><input id="reverse" type="checkbox"/>
+                </div>
+                <div>
+                    <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
+                </div>
+                <button onclick="switchPageState(PageState.Progress)">开始</button>
+            </div>
         </div>
-        <div>
-            <label id="question"></label>
-            <label id="answer"></label>
+        <div id="pageProgress">
+            <div>
+                <label>问题</label>
+                <label>答案</label>
+            </div>
+            <div>
+                <label id="question"></label>
+                <label id="answer"></label>
+            </div>
+            <div>
+                <button onclick="ans()" id="showAnswer">显示答案</button>
+            </div>
+            <div>
+                <button onclick="next()">下一个</button>
+            </div>
+            <div>
+                <label id="progress"></label>
+            </div>
+            <div>
+                <label id="costTime"></label>
+            </div>
         </div>
-        <div>
-            <button onclick="ans()">显示答案</button>
-        </div>
-        <div>
-            <button onclick="next()">下一个</button>
-        </div>
-        <div>
-            <label>反向记忆</label><input id="reverse" type="checkbox"/>
-        </div>
-        <div>
-            <label id="progress"></label>
-        </div>
-        <div>
-            <label id="costTime"></label>
+        <div id="pageFinish">
+            <div>
+                <label id="totalCostTime"></label>
+            </div>
+            <div>
+                <button onclick="reset()">重新开始</button>
+            </div>
+            <div>
+                <label id="labelCostTime"></label>
+            </div>
+            <div>
+                <textarea id="timeCost" title="消耗时间显示" name="cssTimeCost" readonly disabled></textarea>
+            </div>
         </div>
     </body>
 </html>
