@@ -192,6 +192,7 @@
                             document.getElementById("answerShowed").rows = rows + 2;
                             document.getElementById("answerShowed").value = strAnswerShowed;
                             if (rows > 0) {
+                                document.getElementById("labelAnswerShowed").innerText = "显示过答案的编码:" + rows + "个";
                                 document.getElementById("divAnswerShowed").style.display = "";
                             } else {
                                 document.getElementById("divAnswerShowed").style.display = "none";
@@ -222,6 +223,7 @@
                 curIndex = 0;
                 mapTimeCost = {};
                 document.getElementById("costTime").innerHTML = "";
+                document.getElementById("showAnswerDirectly").checked = false;
 
                 switchPageState(PageState.Start)
             }
@@ -477,7 +479,7 @@
                 </div>
                 <div id="divAnswerShowed">
                     <div>
-                        <label id="labelAnswerShowed"></label>
+                        <label id="labelAnswerShowed">显示过答案的编码</label>
                     </div>
                     <div>
                         <textarea id="answerShowed" title="显示过答案的" class="cssTextArea" readonly disabled></textarea>
