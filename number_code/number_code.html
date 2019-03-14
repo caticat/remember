@@ -1,3 +1,5 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <html>
     <head>
         <!-- 这只是一个粗糙的辅助记忆数字编码的工具,不要对它的功能有太大的期望,最终还是要靠自己记忆(by:老番) -->
@@ -6,6 +8,10 @@
             .cssTextArea
             {
                 width:100%;
+            }
+            #container {
+                max-width: 360px;
+                width:expression(document.body.clientWidth > 360? "360px": "auto" );
             }
         </style>
         <link rel="stylesheet" href="http://cdn.amazeui.org/amazeui/2.7.2/css/amazeui.min.css">
@@ -370,23 +376,23 @@
         </script>
     </head>
     <body>
-        <div class="am-g">
-            <div id="pageStart" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+        <div>
+            <div id="pageStart" class="am-u-sm-centered">
                 <div>
                     <div>
-                        <div class="am-g am-g-fixed">
-                            <div class="am-u-sm-6">
+                        <div>
+                            <div>
                                 <label>测试题目数量:</label>
                             </div>
-                            <div class="am-u-sm-6">
+                            <div>
                                 <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)" title="questionLengthRange"/>
                             </div>
                         </div>
-                        <div class="am-g am-g-fixed">
-                            <div class="am-u-sm-6">
+                        <div>
+                            <div>
                                 <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
                             </div>
-                            <div class="am-u-sm-6">
+                            <div>
                                 <button onclick="resumeQuestionMaxLength()" class="am-btn am-btn-success am-btn-block">最大值</button>
                             </div>
                         </div>
@@ -396,11 +402,11 @@
                         <!--<label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>-->
                         <!--<label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>-->
                     <!--</div>-->
-                    <div class="am-g am-g-fixed">
-                        <div class="am-u-sm-6">
+                    <div>
+                        <div>
                             <label>反向记忆</label><input id="reverse" type="checkbox"/>
                         </div>
-                        <div class="am-u-sm-6">
+                        <div>
                             <button onclick="switchPageState(PageState.Progress)" class="am-btn am-btn-primary am-btn-block">开始</button>
                         </div>
                     </div>
@@ -412,44 +418,44 @@
                     </div>
                 </div>
             </div>
-            <div id="pageProgress" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
-                <div class="am-g am-g-fixed">
-                    <div class="am-u-sm-6">
+            <div id="pageProgress" class="am-u-sm-centered">
+                <div>
+                    <div>
                         <label>问题</label>
                     </div>
-                    <div class="am-u-sm-6">
+                    <div>
                         <label>答案</label>
                     </div>
                 </div>
-                <div class="am-g am-g-fixed">
-                    <div class="am-u-sm-6">
+                <div>
+                    <div>
                         <label id="question"></label>
                     </div>
-                    <div class="am-u-sm-6">
+                    <div>
                         <label id="answer"></label>
                     </div>
                 </div>
-                <div class="am-g am-g-fixed">
-                    <div class="am-u-sm-6">
+                <div>
+                    <div>
                         <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
                     </div>
-                    <div class="am-u-sm-6">
+                    <div>
                         <button onclick="ans()" id="showAnswer" class="am-btn am-btn-success am-btn-block">显示答案</button>
                     </div>
                 </div>
-                <div class="am-g am-g-fixed">
-                    <div class="am-u-sm-6">
+                <div>
+                    <div>
                         <button onclick="switchPageState(PageState.Pause)" class="am-btn am-btn-warning am-btn-block">暂停</button>
                     </div>
-                    <div class="am-u-sm-6">
+                    <div>
                         <button onclick="next()" class="am-btn am-btn-secondary am-btn-block">下一个</button>
                     </div>
                 </div>
-                <div class="am-g am-g-fixed">
-                    <div class="am-u-sm-6">
+                <div>
+                    <div>
                         <label id="uiProgress">进度</label>
                     </div>
-                    <div class="am-u-sm-6">
+                    <div>
                         <div class="am-progress am-progress-sm">
                             <div id="progress" class="am-progress-bar"></div>
                         </div>
@@ -462,7 +468,7 @@
                     <button onclick="stop()" class="am-btn am-btn-danger am-btn-block">停止</button>
                 </div>
             </div>
-            <div id="pageFinish" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+            <div id="pageFinish" class="am-u-sm-centered">
                 <div>
                     <label id="totalCostTime"></label>
                 </div>
@@ -484,7 +490,7 @@
                     <textarea id="timeCost" title="消耗时间显示" class="cssTextArea" readonly disabled></textarea>
                 </div>
             </div>
-            <div id="pagePause" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+            <div id="pagePause" class="am-u-sm-centered">
                 <div>
                     <button onclick="switchPageState(PageState.Resume)" class="am-btn am-btn-warning am-btn-block">恢复</button>
                 </div>
