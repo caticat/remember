@@ -54,6 +54,7 @@
                 document.getElementById("questionMaxLength").min = 1;
                 document.getElementById("questionMaxLength").max = questionLen;
                 document.getElementById("questionMaxLength").value = questionLen;
+                document.getElementById("uiQuestionMaxLength").value = questionLen;
 
                 reset();
 
@@ -355,10 +356,16 @@
         <div id="pageStart">
             <div>
                 <div>
-                    <label>测试题目数量:</label>
-                    <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)"></input>
-                    <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
-                    <button onclick="resumeQuestionMaxLength()">最大值</button>
+                    <div>
+                        <label>测试题目数量:</label>
+                    </div>
+                    <div>
+                        <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)" title="questionLengthRange"/>
+                    </div>
+                    <div>
+                        <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
+                        <button onclick="resumeQuestionMaxLength()">最大值</button>
+                    </div>
                 </div>
                 <!--<div>-->
                     <!--<label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>-->
