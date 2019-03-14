@@ -8,6 +8,7 @@
                 width:100%;
             }
         </style>
+        <link rel="stylesheet" href="http://cdn.amazeui.org/amazeui/2.7.2/css/amazeui.min.css">
         <script src="number_code.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript">
             // 固定数据
@@ -60,8 +61,8 @@
 
                 // 说明
                 document.getElementById("uiLog").style.display = "none";
-                document.getElementById("uiLog").value = "老番的碎碎念:\n1. 这是本人出于兴趣完善的背诵数字编码的小工具.\n2. 仅供学习使用\n3. 编码内容没有上传到任何公共平台保存\n4. 只限在学习群内使用\n5. 本人强迫症,后续可能会有更新,但是应该不会再发出来了,更新会提交到https://github.com/caticat/remember/tree/master/number_code这里,有需求可以自取(欢迎提bug,或者推送更新过来)\n6. 代码随便改\n7. 没有图片是因为不好整合到一个文件中,图片又不能传到外网~囧";
-                document.getElementById("uiLog").rows = 10;
+                document.getElementById("uiLog").value = "老番的碎碎念:\n1. 这是本人出于兴趣完善的背诵数字编码的小工具.\n2. 仅供学习使用\n3. 编码内容没有上传到任何公共平台保存\n4. 只限在学习群内使用\n5. 本人强迫症,后续可能会有更新,但是应该不会再发出来了,更新会提交到https://github.com/caticat/remember/tree/master/number_code这里,有需求可以自取(欢迎提bug,或者推送更新过来)\n6. 代码随便改\n7. 没有图片是因为不好整合到一个文件中,图片又不能传到外网~囧\n8. css直接用的AmazeUI,我又不懂~";
+                document.getElementById("uiLog").rows = 13;
             };
 
             // 切换页面状态
@@ -86,6 +87,7 @@
                         // 处理数据
                         // 出题长度
                         questionLen = parseInt(document.getElementById("questionMaxLength").value);
+                        document.getElementById("progress").max=questionLen;
                         // console.log("长度:"+questionLen + ",文字:" + document.getElementById("questionMaxLength").value);
                         // 出题顺序
                         const l = arr.length;
@@ -129,7 +131,11 @@
                         let timeNow = parseInt((new Date()).getTime() / 1000);
                         let duration = timeNow - timeBegin;
                         let average = duration / (curIndex + 1);
-                        document.getElementById("totalCostTime").innerHTML = "当前用时:"+getTimeStr(duration)+",平均用时:"+getTimeStr(average);
+                        let perSecondCount = 0;
+                        if (average != 0) {
+                            perSecondCount = parseInt((1/average) * 100)/100;
+                        }
+                        document.getElementById("totalCostTime").innerHTML = questionLen + "个编码,总共用时:"+getTimeStr(duration)+",平均用时:"+getTimeStr(average)+",每秒编码:"+perSecondCount+"个";
 
                         // 最耗时统计
                         let arrTimeCost = Array();
@@ -152,7 +158,9 @@
                         let strTimeCost = "";
                         let rows = 0;
                         for (let i = 0; i < arrTimeCost.length; i++) {
-                            if (arrTimeCost[i].cost >= SINGLE_WORD_TIME_LIMIT) {
+                            if (arrTimeCost[i].show) {
+                                // 显示过答案的不在这里统计
+                            } else if (arrTimeCost[i].cost >= SINGLE_WORD_TIME_LIMIT) {
                                 strTimeCost += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + ":用时:" + getTimeStr(arrTimeCost[i].cost) + "\n";
                                 rows++;
                             } else {
@@ -178,9 +186,9 @@
                             document.getElementById("answerShowed").rows = rows + 2;
                             document.getElementById("answerShowed").value = strAnswerShowed;
                             if (rows > 0) {
-                                document.getElementById("labelAnswerShowed").innerText = "所有显示过答案的编码";
+                                document.getElementById("divAnswerShowed").style.display = "";
                             } else {
-                                document.getElementById("labelAnswerShowed").innerText = "没有显示过答案的编码";
+                                document.getElementById("divAnswerShowed").style.display = "none";
                             }
                         }
 
@@ -226,7 +234,9 @@
                     document.getElementById("question").innerHTML = arrRandom[curIndex];
                 }
                 document.getElementById("answer").innerHTML = "";
-                document.getElementById("progress").innerHTML = "当前进度:"+(curIndex + 1)+"/"+questionLen;
+                document.getElementById("uiProgress").innerText="进度(" + (curIndex + 1) + "/" + questionLen + ")";
+                // document.getElementById("progress").value = (curIndex + 1);
+                document.getElementById("progress").style.width = parseInt(((curIndex + 1)/questionLen) * 100)+"%";
 
                 // 时间统计
                 timeBeginQuestion = parseInt((new Date()).getTime() / 1000);
@@ -268,6 +278,12 @@
                 showTime();
             }
 
+            // 停止
+            function stop() {
+                questionLen = curIndex + 1;
+                next();
+            }
+
             // 说明展示
             function switchLog(ui) {
                 if (ui.innerText == "+") {
@@ -303,6 +319,7 @@
             // 恢复计划答题最大值
             function resumeQuestionMaxLength() {
                 document.getElementById("questionMaxLength").value = arr.length;
+                document.getElementById("uiQuestionMaxLength").value = arr.length;
             }
 
             // 直接显示答案状态变更
@@ -353,93 +370,128 @@
         </script>
     </head>
     <body>
-        <div id="pageStart">
-            <div>
+        <div class="am-g">
+            <div id="pageStart" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
                 <div>
                     <div>
-                        <label>测试题目数量:</label>
+                        <div class="am-g am-g-fixed">
+                            <div class="am-u-sm-6">
+                                <label>测试题目数量:</label>
+                            </div>
+                            <div class="am-u-sm-6">
+                                <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)" title="questionLengthRange"/>
+                            </div>
+                        </div>
+                        <div class="am-g am-g-fixed">
+                            <div class="am-u-sm-6">
+                                <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
+                            </div>
+                            <div class="am-u-sm-6">
+                                <button onclick="resumeQuestionMaxLength()" class="am-btn am-btn-success am-btn-block">最大值</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div>-->
+                        <!--<label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>-->
+                        <!--<label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>-->
+                        <!--<label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>-->
+                    <!--</div>-->
+                    <div class="am-g am-g-fixed">
+                        <div class="am-u-sm-6">
+                            <label>反向记忆</label><input id="reverse" type="checkbox"/>
+                        </div>
+                        <div class="am-u-sm-6">
+                            <button onclick="switchPageState(PageState.Progress)" class="am-btn am-btn-primary am-btn-block">开始</button>
+                        </div>
                     </div>
                     <div>
-                        <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)" title="questionLengthRange"/>
+                        <button onclick="switchLog(this)" class="am-btn am-btn-warning">+</button>
                     </div>
                     <div>
-                        <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
-                        <button onclick="resumeQuestionMaxLength()">最大值</button>
+                        <textarea id="uiLog" title="说明" class="cssTextArea" readonly disabled></textarea>
                     </div>
                 </div>
-                <!--<div>-->
-                    <!--<label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>-->
-                    <!--<label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>-->
-                    <!--<label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>-->
-                <!--</div>-->
-                <div>
-                    <label>反向记忆</label><input id="reverse" type="checkbox"/>
+            </div>
+            <div id="pageProgress" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+                <div class="am-g am-g-fixed">
+                    <div class="am-u-sm-6">
+                        <label>问题</label>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <label>答案</label>
+                    </div>
+                </div>
+                <div class="am-g am-g-fixed">
+                    <div class="am-u-sm-6">
+                        <label id="question"></label>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <label id="answer"></label>
+                    </div>
+                </div>
+                <div class="am-g am-g-fixed">
+                    <div class="am-u-sm-6">
+                        <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <button onclick="ans()" id="showAnswer" class="am-btn am-btn-success am-btn-block">显示答案</button>
+                    </div>
+                </div>
+                <div class="am-g am-g-fixed">
+                    <div class="am-u-sm-6">
+                        <button onclick="switchPageState(PageState.Pause)" class="am-btn am-btn-warning am-btn-block">暂停</button>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <button onclick="next()" class="am-btn am-btn-secondary am-btn-block">下一个</button>
+                    </div>
+                </div>
+                <div class="am-g am-g-fixed">
+                    <div class="am-u-sm-6">
+                        <label id="uiProgress">进度</label>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-progress am-progress-sm">
+                            <div id="progress" class="am-progress-bar"></div>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <button onclick="switchPageState(PageState.Progress)">开始</button>
+                    <label id="costTime"></label>
                 </div>
                 <div>
-                    <button onclick="switchLog(this)">+</button>
+                    <button onclick="stop()" class="am-btn am-btn-danger am-btn-block">停止</button>
+                </div>
+            </div>
+            <div id="pageFinish" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+                <div>
+                    <label id="totalCostTime"></label>
                 </div>
                 <div>
-                    <textarea id="uiLog" title="说明" class="cssTextArea" readonly disabled></textarea>
+                    <button onclick="reset()" class="am-btn am-btn-primary am-btn-block">重新开始</button>
+                </div>
+                <div id="divAnswerShowed">
+                    <div>
+                        <label id="labelAnswerShowed"></label>
+                    </div>
+                    <div>
+                        <textarea id="answerShowed" title="显示过答案的" class="cssTextArea" readonly disabled></textarea>
+                    </div>
+                </div>
+                <div>
+                    <label id="labelCostTime"></label>
+                </div>
+                <div>
+                    <textarea id="timeCost" title="消耗时间显示" class="cssTextArea" readonly disabled></textarea>
+                </div>
+            </div>
+            <div id="pagePause" class="am-u-lg-6 am-u-md-8 am-u-sm-centered">
+                <div>
+                    <button onclick="switchPageState(PageState.Resume)" class="am-btn am-btn-warning am-btn-block">恢复</button>
                 </div>
             </div>
         </div>
-        <div id="pageProgress">
-            <div>
-                <label>问题</label>
-                <label>答案</label>
-            </div>
-            <div>
-                <label id="question"></label>
-                <label id="answer"></label>
-            </div>
-            <div>
-                <button onclick="ans()" id="showAnswer">显示答案</button>
-            </div>
-            <div>
-                <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
-            </div>
-            <div>
-                <button onclick="next()">下一个</button>
-            </div>
-            <div>
-                <label id="progress"></label>
-            </div>
-            <div>
-                <label id="costTime"></label>
-            </div>
-            <div>
-                <button onclick="switchPageState(PageState.Pause)">暂停</button>
-            </div>
-        </div>
-        <div id="pageFinish">
-            <div>
-                <label id="totalCostTime"></label>
-            </div>
-            <div>
-                <button onclick="reset()">重新开始</button>
-            </div>
-            <div>
-                <label id="labelCostTime"></label>
-            </div>
-            <div>
-                <textarea id="timeCost" title="消耗时间显示" class="cssTextArea" readonly disabled></textarea>
-            </div>
-            <div id="divAnswerShowed">
-                <div>
-                    <label id="labelAnswerShowed"></label>
-                </div>
-                <div>
-                    <textarea id="answerShowed" title="显示过答案的" class="cssTextArea" readonly disabled></textarea>
-                </div>
-            </div>
-        </div>
-        <div id="pagePause">
-            <div>
-                <button onclick="switchPageState(PageState.Resume)">恢复</button>
-            </div>
-        </div>
+
+        <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+        <script type="text/javascript" src="http://cdn.amazeui.org/amazeui/2.7.2/js/amazeui.min.js"></script>
     </body>
 </html>
