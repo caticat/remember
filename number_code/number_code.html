@@ -3,10 +3,9 @@
         <!-- 这只是一个粗糙的辅助记忆数字编码的工具,不要对它的功能有太大的期望,最终还是要靠自己记忆(by:老番) -->
         <meta charset="UTF-8"/>
         <style>
-            cssTimeCost
+            .cssTextArea
             {
                 width:100%;
-                height:100%;
             }
         </style>
         <script src="number_code.js" type="text/javascript" charset="utf-8"></script>
@@ -28,15 +27,18 @@
 
             // 状态
             const PageState = {
-              Start:0,
-              Progress:1,
-              Finish:2,
+                Start:0,
+                Progress:1,
+                Finish:2,
+                Pause:3,
+                Resume:4,
             };
             const SequenceState = {
                 Random:0,
                 Forward:1,
                 Backward:2,
             };
+            const SINGLE_WORD_TIME_LIMIT = 2; // 超过X秒的编码都会显示出来
 
             // 动态数据
             let arrRandom = Array(); // 随机索引数组
@@ -44,11 +46,21 @@
             let timeBegin = -1; // 记录总用时
             let questionLen = arr.length; // 题目数量
             let timeBeginQuestion = -1; // 当前答题初始时间
+            let timeBeginPause = 0; // 暂停时长
             let mapTimeCost = {}; // 耗时统计
 
             // 初始
             window.onload = function () {
+                document.getElementById("questionMaxLength").min = 1;
+                document.getElementById("questionMaxLength").max = questionLen;
+                document.getElementById("questionMaxLength").value = questionLen;
+
                 reset();
+
+                // 说明
+                document.getElementById("uiLog").style.display = "none";
+                document.getElementById("uiLog").value = "老番的碎碎念:\n1. 这是本人出于兴趣完善的背诵数字编码的小工具.\n2. 仅供学习使用\n3. 编码内容没有上传到任何公共平台保存\n4. 只限在学习群内使用\n5. 本人强迫症,后续可能会有更新,但是应该不会再发出来了,更新会提交到https://github.com/caticat/remember/tree/master/number_code这里,有需求可以自取(欢迎提bug,或者推送更新过来)\n6. 代码随便改\n7. 没有图片是因为不好整合到一个文件中,图片又不能传到外网~囧";
+                document.getElementById("uiLog").rows = 10;
             };
 
             // 切换页面状态
@@ -64,6 +76,7 @@
                 document.getElementById("pageStart").style.display = "none";
                 document.getElementById("pageProgress").style.display = "none";
                 document.getElementById("pageFinish").style.display = "none";
+                document.getElementById("pagePause").style.display = "none";
                 switch (state) {
                     case PageState.Start:
                         document.getElementById("pageStart").style.display = "";
@@ -72,7 +85,7 @@
                         // 处理数据
                         // 出题长度
                         questionLen = parseInt(document.getElementById("questionMaxLength").value);
-                        console.log("长度:"+questionLen + ",文字:" + document.getElementById("questionMaxLength").value);
+                        // console.log("长度:"+questionLen + ",文字:" + document.getElementById("questionMaxLength").value);
                         // 出题顺序
                         const l = arr.length;
                         arrRandom = arr.slice();
@@ -120,11 +133,11 @@
                         // 最耗时统计
                         let arrTimeCost = Array();
                         for (let key in mapTimeCost) {
-                            arrTimeCost.push({index:key,cost:mapTimeCost[key]});
+                            arrTimeCost.push({index:key,cost:mapTimeCost[key].cost,show:mapTimeCost[key].show});
                         }
                         arrTimeCost.sort(function (key){
                             return function (a, b) {
-                                console.log(key+",a:"+a[key]+",b:"+b[key]);
+                                // console.log(key+",a:"+a[key]+",b:"+b[key]);
                                 if (a[key] < b[key]) {
                                     return 1;
                                 } else if (a[key] == b[key]) {
@@ -134,20 +147,55 @@
                                 }
                             }
                         }("cost"));
-                        let costLen = 10;
-                        if (arrTimeCost.length < costLen) {
-                            costLen = arrTimeCost.length;
-                        }
-                        document.getElementById("labelCostTime").innerText = "最耗时的前"+costLen+"个编码";
+                        document.getElementById("labelCostTime").innerText = "耗时超过"+SINGLE_WORD_TIME_LIMIT+"秒的编码";
                         let strTimeCost = "";
-                        for (let i = 0; i < costLen; i++) {
-                            strTimeCost += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + ":用时:" + getTimeStr(arrTimeCost[i].cost) + "\n";
+                        let rows = 0;
+                        for (let i = 0; i < arrTimeCost.length; i++) {
+                            if (arrTimeCost[i].cost >= SINGLE_WORD_TIME_LIMIT) {
+                                strTimeCost += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + ":用时:" + getTimeStr(arrTimeCost[i].cost) + "\n";
+                                rows++;
+                            } else {
+                                break;
+                            }
                         }
-                        document.getElementById("timeCost").rows = costLen + 2;
+                        document.getElementById("timeCost").rows = rows + 2;
                         document.getElementById("timeCost").value = strTimeCost;
+
+                        // 显示答案统计
+                        if (document.getElementById("showAnswerDirectly").checked) {
+                            document.getElementById("divAnswerShowed").style.display = "none";
+                        } else {
+                            document.getElementById("divAnswerShowed").style.display = "";
+                            let strAnswerShowed = "";
+                            let rows = 0;
+                            for (let i = 0; i < arrTimeCost.length; i++) {
+                                if (arrTimeCost[i].show) {
+                                    strAnswerShowed += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + "\n";
+                                    rows++;
+                                }
+                            }
+                            document.getElementById("answerShowed").rows = rows + 2;
+                            document.getElementById("answerShowed").value = strAnswerShowed;
+                            if (rows > 0) {
+                                document.getElementById("labelAnswerShowed").innerText = "所有显示过答案的编码";
+                            } else {
+                                document.getElementById("labelAnswerShowed").innerText = "没有显示过答案的编码";
+                            }
+                        }
 
                         // 显示页面
                         document.getElementById("pageFinish").style.display = "";
+                        break;
+                    case PageState.Pause:
+                        document.getElementById("pagePause").style.display = "";
+                        timeBeginPause = parseInt((new Date()).getTime() / 1000);
+                        break;
+                    case PageState.Resume:
+                        let pauseTime = (parseInt((new Date()).getTime() / 1000) - timeBeginPause);
+                        timeBegin += pauseTime;
+                        timeBeginQuestion += pauseTime;
+                        timeBeginPause = 0;
+                        document.getElementById("pageProgress").style.display = "";
                         break;
                     default:
                         return;
@@ -159,10 +207,6 @@
                 curIndex = 0;
                 mapTimeCost = {};
                 document.getElementById("costTime").innerHTML = "";
-                if (document.getElementById("questionMaxLength").value == 0) {
-                    document.getElementById("questionMaxLength").max = questionLen;
-                    document.getElementById("questionMaxLength").value = questionLen;
-                }
 
                 switchPageState(PageState.Start)
             }
@@ -208,7 +252,10 @@
             // 下一个
             function next() {
                 // 时间统计
-                mapTimeCost[curIndex] = parseInt((new Date()).getTime() / 1000) - timeBeginQuestion;
+                mapTimeCost[curIndex] = {
+                    cost:(parseInt((new Date()).getTime() / 1000) - timeBeginQuestion),
+                    show:(document.getElementById("answer").innerText != ""),
+                };
 
                 if (curIndex + 1 >= questionLen) {
                     switchPageState(PageState.Finish);
@@ -218,6 +265,22 @@
                 curIndex += 1;
                 ask();
                 showTime();
+            }
+
+            // 说明展示
+            function switchLog(ui) {
+                if (ui.innerText == "+") {
+                    ui.innerText = "-";
+                    document.getElementById("uiLog").style.display = "";
+                } else {
+                    ui.innerText = "+";
+                    document.getElementById("uiLog").style.display = "none";
+                }
+            }
+
+            // 滑块变更
+            function onRangeChanged(ui) {
+                document.getElementById("uiQuestionMaxLength").value = ui.value;
             }
 
             // 答题数量长度变更
@@ -233,6 +296,7 @@
                     len = questionLen;
                 }
                 ui.value = len;
+                document.getElementById("questionMaxLength").value = len;
             }
 
             // 恢复计划答题最大值
@@ -244,8 +308,10 @@
             function onShowAnswerDirectlyChanged(ui) {
                 if (ui.checked) {
                     document.getElementById("showAnswer").style.display = "none";
+                    ans()
                 } else {
                     document.getElementById("showAnswer").style.display = "";
+                    document.getElementById("answer").innerHTML = "";
                 }
             }
 
@@ -289,21 +355,28 @@
         <div id="pageStart">
             <div>
                 <div>
-                    <label>测试题目数量:</label><input id="questionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
+                    <label>测试题目数量:</label>
+                    <input type="range" id="questionMaxLength" onchange="onRangeChanged(this)"></input>
+                    <input id="uiQuestionMaxLength" type="number" min="1" step="10" title="测试题目数量" onblur="onQuestionMaxLengthChanged(this)"/>
                     <button onclick="resumeQuestionMaxLength()">最大值</button>
                 </div>
-                <div>
-                    <label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>
-                    <label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>
-                    <label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>
-                </div>
+                <!--<div>-->
+                    <!--<label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>-->
+                    <!--<label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>-->
+                    <!--<label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>-->
+                <!--</div>-->
                 <div>
                     <label>反向记忆</label><input id="reverse" type="checkbox"/>
                 </div>
                 <div>
-                    <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
+                    <button onclick="switchPageState(PageState.Progress)">开始</button>
                 </div>
-                <button onclick="switchPageState(PageState.Progress)">开始</button>
+                <div>
+                    <button onclick="switchLog(this)">+</button>
+                </div>
+                <div>
+                    <textarea id="uiLog" title="说明" class="cssTextArea" readonly disabled></textarea>
+                </div>
             </div>
         </div>
         <div id="pageProgress">
@@ -319,6 +392,9 @@
                 <button onclick="ans()" id="showAnswer">显示答案</button>
             </div>
             <div>
+                <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
+            </div>
+            <div>
                 <button onclick="next()">下一个</button>
             </div>
             <div>
@@ -326,6 +402,9 @@
             </div>
             <div>
                 <label id="costTime"></label>
+            </div>
+            <div>
+                <button onclick="switchPageState(PageState.Pause)">暂停</button>
             </div>
         </div>
         <div id="pageFinish">
@@ -339,7 +418,20 @@
                 <label id="labelCostTime"></label>
             </div>
             <div>
-                <textarea id="timeCost" title="消耗时间显示" name="cssTimeCost" readonly disabled></textarea>
+                <textarea id="timeCost" title="消耗时间显示" class="cssTextArea" readonly disabled></textarea>
+            </div>
+            <div id="divAnswerShowed">
+                <div>
+                    <label id="labelAnswerShowed"></label>
+                </div>
+                <div>
+                    <textarea id="answerShowed" title="显示过答案的" class="cssTextArea" readonly disabled></textarea>
+                </div>
+            </div>
+        </div>
+        <div id="pagePause">
+            <div>
+                <button onclick="switchPageState(PageState.Resume)">恢复</button>
             </div>
         </div>
     </body>
