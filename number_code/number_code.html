@@ -325,10 +325,10 @@
             // 直接显示答案状态变更
             function onShowAnswerDirectlyChanged(ui) {
                 if (ui.checked) {
-                    document.getElementById("showAnswer").style.display = "none";
+                    // document.getElementById("showAnswer").style.display = "none";
                     ans()
                 } else {
-                    document.getElementById("showAnswer").style.display = "";
+                    // document.getElementById("showAnswer").style.display = "";
                     document.getElementById("answer").innerHTML = "";
                     document.getElementById("pic").style.display = "none";
                 }
@@ -430,11 +430,11 @@
                             </div>
                         </div>
                     </div>
-                    <!--<div>-->
-                        <!--<label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>-->
-                        <!--<label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>-->
-                        <!--<label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>-->
-                    <!--</div>-->
+                    <div>
+                        <label>随机</label><input type="radio" name="sequence" title="随机" value="SequenceState.Random" checked="checked"/>
+                        <label>顺序</label><input type="radio" name="sequence" title="正向" value="SequenceState.Forward"/>
+                        <label>倒序</label><input type="radio" name="sequence" title="反向" value="SequenceState.Backward"/>
+                    </div>
                     <div>
                         <div>
                             <label>反向记忆</label><input id="reverse" type="checkbox"/>
@@ -474,9 +474,8 @@
                     </div>
                 </div>
                 <div class="am-g am-g-fixed am-btn-group">
-                        <button onclick="switchPageState(PageState.Pause)" class="am-btn am-btn-warning  am-btn-default am-u-sm-4">暂停</button>
-                        <button onclick="ans()" id="showAnswer" class="am-btn am-btn-success  am-btn-default am-u-sm-4">显示答案</button>
-                        <button onclick="next()" class="am-btn am-btn-secondary am-btn-default am-u-sm-4">下一个</button>
+                        <button onclick="ans()" id="showAnswer" class="am-btn am-btn-success  am-btn-default am-u-sm-6">显示答案</button>
+                        <button onclick="next()" class="am-btn am-btn-secondary am-btn-default am-u-sm-6">下一个</button>
                 </div>
                 <div>
                     <div>
@@ -491,8 +490,9 @@
                 <div>
                     <label id="costTime"></label>
                 </div>
-                <div>
-                    <button onclick="stop()" class="am-btn am-btn-danger am-btn-block">停止</button>
+                <div class="am-g am-g-fixed am-btn-group">
+                    <button onclick="switchPageState(PageState.Pause)" class="am-btn am-btn-warning  am-btn-default am-u-sm-6">暂停</button>
+                    <button onclick="stop()" class="am-btn am-btn-danger am-u-sm-6">停止</button>
                 </div>
                 <div id="pic">
 
