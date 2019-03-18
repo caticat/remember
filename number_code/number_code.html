@@ -370,9 +370,9 @@
                     index += 10;
                 }
                 // console.log(index, key, key.length);
-                if (index > 45) {
+                if (index > 55) { // 这里比较奇怪,因为前面加了10个值,所以要减回去
                     ret.src = images[1];
-                    index -= 45;
+                    index -= 56; // 这里要注意多减1,因为第一个就是新的数字
                 } else {
                     ret.src = images[0];
                 }
