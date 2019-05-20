@@ -52,6 +52,8 @@
             let timeBeginQuestion = -1; // 当前答题初始时间
             let timeBeginPause = 0; // 暂停时长
             let mapTimeCost = {}; // 耗时统计
+            let timeAutoPlayInterval = 1000; // 自动播放时间间隔
+            let timeAutoPlayFd; // 自动播放
 
             // 初始
             window.onload = function () {
@@ -59,6 +61,10 @@
                 document.getElementById("questionMaxLength").max = questionLen;
                 document.getElementById("questionMaxLength").value = questionLen;
                 document.getElementById("uiQuestionMaxLength").value = questionLen;
+                document.getElementById("autoPlayInterval").min = 0;
+                document.getElementById("autoPlayInterval").max = 10000;
+                document.getElementById("autoPlayInterval").value = timeAutoPlayInterval;
+                onAutoPlayIntervalChanged(document.getElementById("autoPlayInterval"));
                 document.getElementById("answer").style.display = "none";
 
                 reset();
@@ -67,7 +73,7 @@
                 document.getElementById("uiReadme").style.display = "none";
                 document.getElementById("uiLog").style.display = "none";
                 document.getElementById("uiLog").value = "老番的碎碎念:\n1. 这是本人出于兴趣完善的背诵数字编码的小工具.\n2. 仅供学习使用\n3. 编码内容没有上传到任何公共平台保存\n4. 只限在学习群内使用\n5. 本人强迫症,后续可能会有更新,但是应该不会再发出来了,更新会提交到https://github.com/caticat/remember/tree/master/number_code这里,有需求可以自取(欢迎提bug,或者推送更新过来)\n6. 代码随便改\n7. 没有图片是因为不好整合到一个文件中,图片又不能传到外网~囧\n8. css直接用的AmazeUI,我又不懂~\n9. 图片使用二进制方式集成到页面中来了,很大,文件快1m了\n10. 所有的外链都集成过来了,不需要联网也可以正常显示了.\n11. 具体说明见(https://caticat.github.io/2019/03/18/number-code/)";
-                document.getElementById("uiLog").rows = 15;
+                document.getElementById("uiLog").rows = 20;
             };
 
             // 切换页面状态
@@ -125,6 +131,9 @@
                         document.getElementById("pageProgress").style.display = "";
                         break;
                     case PageState.Finish:
+                        // 停止播放
+                        clearInterval(timeAutoPlayFd);
+
                         // 处理数据
                         let timeNow = parseInt((new Date()).getTime() / 1000);
                         let duration = timeNow - timeBegin;
@@ -197,6 +206,7 @@
                     case PageState.Pause:
                         document.getElementById("pagePause").style.display = "";
                         timeBeginPause = parseInt((new Date()).getTime() / 1000);
+                        clearInterval(timeAutoPlayFd);
                         break;
                     case PageState.Resume:
                         let pauseTime = (parseInt((new Date()).getTime() / 1000) - timeBeginPause);
@@ -204,6 +214,7 @@
                         timeBeginQuestion += pauseTime;
                         timeBeginPause = 0;
                         document.getElementById("pageProgress").style.display = "";
+                        onAutoPlayChanged(document.getElementById("autoPlay"));
                         break;
                     default:
                         return;
@@ -216,6 +227,10 @@
                 mapTimeCost = {};
                 document.getElementById("costTime").innerHTML = "";
                 document.getElementById("showAnswerDirectly").checked = false;
+                document.getElementById("autoPlay").checked = false;
+                setTimeout(function (){
+                    onAutoPlayChanged(document.getElementById("autoPlay"));
+                }, timeAutoPlayInterval);
 
                 switchPageState(PageState.Start)
             }
@@ -337,6 +352,29 @@
                     document.getElementById("answer").innerHTML = "";
                     document.getElementById("pic").style.display = "none";
                 }
+            }
+
+            // 自动播放
+            function onAutoPlayChanged(ui) {
+                if (ui.checked) {
+                    timeAutoPlayFd = setInterval(autoPlay, timeAutoPlayInterval);
+                } else {
+                    clearInterval(timeAutoPlayFd);
+                }
+            }
+            function onAutoPlayIntervalChanged(ui) {
+                timeAutoPlayInterval = ui.value;
+                if (timeAutoPlayInterval < 500) {
+                    timeAutoPlayInterval = 500;
+                }
+                timeAutoPlayInterval = parseInt(timeAutoPlayInterval / 100) * 100;
+                document.getElementById("showAutoPlayInterval").innerHTML = timeAutoPlayInterval / 1000;
+
+                clearInterval(timeAutoPlayFd);
+                onAutoPlayChanged(document.getElementById("autoPlay"));
+            }
+            function autoPlay() {
+                next();
             }
 
             // 显示时间
@@ -484,6 +522,17 @@
                 <div>
                     <div>
                         <label>直接显示答案</label><input id="showAnswerDirectly" type="checkbox" onchange="onShowAnswerDirectlyChanged(this)"/>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <label>自动播放</label><input id="autoPlay" type="checkbox" onchange="onAutoPlayChanged(this)"/>
+                    </div>
+                    <div>
+                        <label>播放速度:</label><label id="showAutoPlayInterval"></label><label>秒</label>
+                    </div>
+                    <div>
+                        <input type="range" id="autoPlayInterval" onchange="onAutoPlayIntervalChanged(this)" title="autoPlayInterval"/>
                     </div>
                 </div>
                 <div class="am-g am-g-fixed am-btn-group">
