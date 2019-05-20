@@ -165,7 +165,7 @@
                         let strTimeCost = "";
                         let rows = 0;
                         for (let i = 0; i < arrTimeCost.length; i++) {
-                            if (arrTimeCost[i].show) {
+                            if (arrTimeCost[i].show || arrTimeCost[i].isAutoPlay) {
                                 // 显示过答案的不在这里统计
                             } else if (arrTimeCost[i].cost >= SINGLE_WORD_TIME_LIMIT) {
                                 strTimeCost += arrRandom[arrTimeCost[i].index] + "->" + data[arrRandom[arrTimeCost[i].index]] + ":用时:" + getTimeStr(arrTimeCost[i].cost) + "\n";
@@ -284,6 +284,7 @@
                 mapTimeCost[curIndex] = {
                     cost:(parseInt((new Date()).getTime() / 1000) - timeBeginQuestion),
                     show:(document.getElementById("answer").innerText != ""),
+                    isAutoPlay: document.getElementById("autoPlay").checked,
                 };
 
                 if (curIndex + 1 >= questionLen) {
